@@ -29,11 +29,30 @@ function TabREST(serverURL, username, password, siteUrl) {
 			console.log("Login Response:");
 			console.log(body + '/n');
 			var bodyXML = new jsxml.XML(body);
-			var token = bodyXML.child('credentials').attribute("token").getValue();
+			this.token = bodyXML.child('credentials').attribute("token").getValue();
 			console.log('token:');
-			console.log(token + '\n');
+			console.log(this.token + '\n');
 		}
 	);
+
+	// ********** signOut **************
+	// No parameters
+	// @return status code from request. 200 if succesful
+	function signOut() {
+		request.post(
+			{
+				url: serverURL + '/api/2.0/auth/signin',
+				headers: {
+					'Content-Type': 'text/xml',
+					'X-tableau-auth': this.token
+				}
+
+			},
+			function(err, response, body) {
+				return response;
+			}
+		);
+	}
 }
 
 module.exports = TabREST;
