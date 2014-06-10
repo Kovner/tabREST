@@ -125,16 +125,43 @@ TabREST.prototype.addUserToSite = function(username, siteID, callback) {
 			if(err) {
 				console.log("Error adding user: " + err);
 				return;
-			} else {
-				//If the request was succesful we get xml back that contains the id and name of the added user.
-				var bodyXML = new jsxml.XML(body);
-				var userID = bodyXML.child('user').attribute('id').getValue();
-				var userName = bodyXML.child('user').attribute('name').getValue();
-				if(callback) {
-					callback(userID, userName)
-				}
 			}
+			//If the request was succesful we get xml back that contains the id and name of the added user.
+			var bodyXML = new jsxml.XML(body);
+			var userID = bodyXML.child('user').attribute('id').getValue();
+			var userName = bodyXML.child('user').attribute('name').getValue();
+			if(callback) {
+				callback(userID, userName)
+			}
+			
 		}
 	);	
 }
+
+TabREST.prototype.removeUserFromSite = function(userID, siteID, callback) {
+	request(
+		{
+			url: this.serverURL + '/api/2.0/sites/' + siteID + '/users/' + userID,
+			method: 'DELETE',
+			headers: {
+				'X-Tableau-Auth': this.authToken
+			}
+		},
+
+		function(err, response, body) {
+			if(err) {
+				console.log("Error deleting user" + err);
+				return;
+			}
+			if(response.statusCode != 204) {
+				console.log("Error status code while deleting user: " + response.statusCode);
+				return;
+			}
+			if(callback) {
+				callback();
+			}			
+		}
+	);	
+}
+
 module.exports = TabREST;
