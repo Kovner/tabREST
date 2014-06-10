@@ -24,7 +24,11 @@ function TabREST() {
 // @username an administrative login to the Server
 // @password
 // @siteURL the identifier of the site that comes after /t/.
-// @callBack Code to be executed after a succesful login to Server.
+// @callBack(err, response, authToken)
+//     @@err error from call to Server. Null if call was succesful
+//     @@responseCode 200 if login succeeded. See REST API documentation if not 200. Null if err
+//     @@authToken the authToken from the login. This is stored with the object so nothing manual
+//         is required to do with this. Null if there is an err or responseCode != 200
 //
 TabREST.prototype.login = function(serverURL, username, password, siteURL, callback) {
 	this.serverURL = serverURL;
@@ -41,17 +45,22 @@ TabREST.prototype.login = function(serverURL, username, password, siteURL, callb
 		},
 		function(err, response, body) {
 			if(err) {
-				console.log("Error while logging in: " + err);
+				if(callback) {
+					callback(err, null, null);
+				}
 				return;
 			}
-			if(response.statusCode === 404) {
-				console.log("404. Server URL not found. Check the serverURL");
+			if(response.statusCode != 200) {
+				if(callback) {
+					callback(null, response.statusCode, null);
+				}
 				return;
 			}
+
 			var bodyXML = new jsxml.XML(body);
 			self.authToken = bodyXML.child('credentials').attribute("token").getValue();
 			if(callback) {
-				callback();
+				callback(null, response.statusCode, self.authToken);
 			}
 		}
 	);
@@ -70,8 +79,10 @@ TabREST.prototype.getAuthToken = function() {
 /**
  * Query Server for the SiteID of given siteURL
  * @param  {string}   siteURL  contentUrl of Site (the name of the site as appears in the Server url after /t/)
- * @param  {Function} callback(siteID) function to call after we receive the siteID from Server.
- *     The siteID is passed into this callback.
+ * @param  {Function} callback(err, responseCode, siteID) function to call after we receive the siteID from Server.
+ *    @@err error object from the call to Server. Null if no error.
+ *    @@statusCode status Code from the call to Server. 200 if succesful. Null if err.
+ *    @@siteID ID of the site to use in future calls. Null if err or statusCode != 200
  */
 TabREST.prototype.querySite = function(siteURL, callback) {
 	request(
@@ -85,14 +96,21 @@ TabREST.prototype.querySite = function(siteURL, callback) {
 
 		function(err, response, body) {
 			if(err) {
-				console.log("Error getting site" + err);
-				return;
-			} else {
-				var bodyXML = new jsxml.XML(body);
-				var siteID = bodyXML.child('site').attribute("id").getValue();
 				if(callback) {
-					callback(siteID);
+					callback(err, null, null);
 				}
+				return;
+			} 
+			if(response.statusCode != 200) {
+				if(callback) {
+					callback(null, response.statusCode, null);
+				}
+				return;
+			}
+			var bodyXML = new jsxml.XML(body);
+			var siteID = bodyXML.child('site').attribute("id").getValue();
+			if(callback) {
+				callback(null, response.statusCode, siteID);
 			}
 		}
 	);	
@@ -101,8 +119,11 @@ TabREST.prototype.querySite = function(siteURL, callback) {
  * Add a user to a site
  * @param {string}   username username to be added
  * @param {string}   siteID   siteID of where to add the user. This can be retried with querySite()
- * @param {function} callback(userID, username) function to call after adding the user. 
- *     The new user's ID and username are passed as parameters to the callback.
+ * @param {function} callback(err, responseCode, userID, username) function to call after adding the user. 
+ *     @@err error object from the call to Server. null if no error
+ *     @@responseCode response code returned from the call to Server. null if err. 201 if succesful. null if err
+ *     @@userID userID of the newly added user. null if err or responseCode != 201
+ *     @@userName userName of the newly added user. null if err or responseCode != 201
  */
 TabREST.prototype.addUserToSite = function(username, siteID, callback) {
 	//First, build the XML for the POST
@@ -123,7 +144,15 @@ TabREST.prototype.addUserToSite = function(username, siteID, callback) {
 		},
 		function(err, response, body) {
 			if(err) {
-				console.log("Error adding user: " + err);
+				if(callback) {
+					callback(err, null, null, null);
+				}
+				return;
+			}
+			if(response.statusCode != 201) {
+				if(callback) {
+					callback(null, response.statusCode, null, null);
+				}
 				return;
 			}
 			//If the request was succesful we get xml back that contains the id and name of the added user.
@@ -131,13 +160,20 @@ TabREST.prototype.addUserToSite = function(username, siteID, callback) {
 			var userID = bodyXML.child('user').attribute('id').getValue();
 			var userName = bodyXML.child('user').attribute('name').getValue();
 			if(callback) {
-				callback(userID, userName)
+				callback(null, response.statusCode, userID, userName);
 			}
 			
 		}
 	);	
 }
-
+/**
+ * Remove specified user from specified site
+ * @param  {string}   userID   userID of the user to remove
+ * @param  {string}   siteID   siteID to remove the user from
+ * @param  {Function} callback(err, status)
+ *     @@err err object from the call to Server. null if no error
+ *     @@status http status code from the call to Server. 204 is succesful. null if err.
+ */
 TabREST.prototype.removeUserFromSite = function(userID, siteID, callback) {
 	request(
 		{
@@ -150,16 +186,15 @@ TabREST.prototype.removeUserFromSite = function(userID, siteID, callback) {
 
 		function(err, response, body) {
 			if(err) {
-				console.log("Error deleting user" + err);
-				return;
-			}
-			if(response.statusCode != 204) {
-				console.log("Error status code while deleting user: " + response.statusCode);
+				if(callback) {
+					callback(err, null);
+				}	
 				return;
 			}
 			if(callback) {
-				callback();
-			}			
+				callback(null, response.statusCode);
+			}
+			return;
 		}
 	);	
 }
