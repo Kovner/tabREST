@@ -1,2 +1,2 @@
-# REST-API-Demo
-## Tableau Server REST API Demo
+# tabREST
+## A simplified client for using Tableau Server's REST API

@@ -4,7 +4,8 @@
 	"description":"A simplified client for using Tableau Server's REST API",
 	"dependencies": {
 		"request": "latest",
-		"xml-writer": "latest"
+		"xml-writer": "latest",
+		"node-jsxml": "latest"
 	},
 	"author": "Michael Kovner",
 	"repository": {
