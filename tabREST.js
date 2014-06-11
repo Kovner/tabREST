@@ -30,7 +30,7 @@ function TabREST() {
 // Because logging in is a synchronous call and all further calls must use the authToken,
 //   most of the code that uses this module will happen inside of the callback.
 // @serverURL Url of Tableau Server. Must include protocol eg "http://myServer"
-// @username an administrative login to the Server
+// @adminUsername an administrative login to the Server
 // @password
 // @siteURL the identifier of the site that comes after /t/.
 // @callBack(err, response, authToken)
@@ -39,12 +39,12 @@ function TabREST() {
 //     @@authToken the authToken from the login. This is stored with the object so nothing manual
 //         is required to do with this. Null if there is an err or responseCode != 200
 //
-TabREST.prototype.signin = function(serverURL, username, password, siteURL, callback) {
+TabREST.prototype.signin = function(serverURL, adminUsername, adminPassword, siteURL, callback) {
 	this.serverURL = serverURL;
 	this.siteURL = (siteURL ? siteURL : "");
 	var reqxml = new XMLWriter();
-	reqxml.startElement('tsRequest').startElement('credentials').writeAttribute('name', username)
-		.writeAttribute('password', password).startElement('site').writeAttribute('contentUrl', this.siteURL);
+	reqxml.startElement('tsRequest').startElement('credentials').writeAttribute('name', adminUsername)
+		.writeAttribute('password', adminPassword).startElement('site').writeAttribute('contentUrl', this.siteURL);
 	var self = this;
 	request.post(
 		{
