@@ -8,7 +8,7 @@ var jsxml = require("node-jsxml");
 // Example: 
 // var tabrest = new require('./tabREST');
 // var tr = new tabrest();
-// tr.login("http://serverurl", "admin", "admin", '', function(){});
+// tr.signin("http://serverurl", "admin", "admin", '', function(){});
 function TabREST() {
 	this.serverURL;
 	this.siteURL;
@@ -16,7 +16,16 @@ function TabREST() {
 	
 }
 
-// ********** login ***************
+
+// ********************************
+// ********************************
+// **** Authentication Related Functions ****
+// ********************************
+// ********************************
+// signin (as admin), signinAsUser, getAuthToken, signout, 
+
+
+// ********** signin ***************
 // Logs in to Server and stores the auth token and then calls the callback parameter
 // Because logging in is a synchronous call and all further calls must use the authToken,
 //   most of the code that uses this module will happen inside of the callback.
@@ -30,7 +39,7 @@ function TabREST() {
 //     @@authToken the authToken from the login. This is stored with the object so nothing manual
 //         is required to do with this. Null if there is an err or responseCode != 200
 //
-TabREST.prototype.login = function(serverURL, username, password, siteURL, callback) {
+TabREST.prototype.signin = function(serverURL, username, password, siteURL, callback) {
 	this.serverURL = serverURL;
 	this.siteURL = (siteURL ? siteURL : "");
 	var reqxml = new XMLWriter();
@@ -70,7 +79,7 @@ TabREST.prototype.login = function(serverURL, username, password, siteURL, callb
  * getAuthToken returns the authToken that Server returned when loggin in.
  * 
  * @return {string} Auth token from server. Used in the header of all other Server calls.
- *                       (NULL) if login() has not been called.
+ *                       (NULL) if signin() has not been called.
  */
 TabREST.prototype.getAuthToken = function() {
 	return this.authToken;
